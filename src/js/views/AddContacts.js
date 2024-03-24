@@ -1,12 +1,12 @@
 import React from 'react';
 import ContactForm from '../component/ContactForm';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const AddContacts = () => {
-    const history = useHistory();
+    const navigate = useNavigate();
 
     const handleSave = () => {
-        history.push('/contacts');
+        navigate('/contacts');
     };
 
     return (

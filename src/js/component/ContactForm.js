@@ -38,7 +38,7 @@ const ContactForm = ({ existingContact, onSave }) => {
                     <label htmlFor="address">Address</label>
                     <input type="text" className="form-control" id="address" name="address" value={contact.address} onChange={handleChange} required />
                 </div>
-                <button type="submit" className="btn btn-primary">Save Contact</button>
+                <button type="submit" className="btn btn-primary mt-3">Save Contact</button>
             </form>
         </div>
     );
