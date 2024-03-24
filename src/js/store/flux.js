@@ -1,120 +1,99 @@
-const getState = ({ getStore, getActions, setStore }) => {
-	const baseUrl = "https://playground.4geeks.com/apis/fake/contact/";
+const getState = ({ setStore, getStore, getActions }) => {
+	const fakeAPIUrl = "https://playground.4geeks.com/apis/fake/contact/";
 	const agendaSlug = "my_unique_agenda";
 
 	return {
 		store: {
+			contact: {
+				// Object to hold a single contact's data for add/update form
+				full_name: "",
+				email: "",
+				agenda_slug: agendaSlug,
+				address: "",
+				phone: "",
+			},
+			// Array to hold the list of contacts
 			contacts: []
 		},
 		actions: {
+			// Fetch all contacts for a given agenda
 			loadContacts: () => {
-				// Fetch all contacts
-				fetch(`${baseUrl}agenda/${agendaSlug}`)
-					.then(response => response.json())
+				fetch(`${fakeAPIUrl}agenda/${agendaSlug}`, {
+					headers: {
+						"Content-Type": "application/json"
+					}
+				})
+					.then(response => {
+						if (!response.ok) {
+							throw new Error('Problem fetching contacts');
+						}
+						return response.json();
+					})
 					.then(data => setStore({ contacts: data }))
 					.catch(error => console.error("Error loading contacts:", error));
 			},
-			addContact: (contact) => {
-				// Add a contact
-				fetch(`${baseUrl}`, {
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify({
+			// Update the store.contact object when form inputs change
+			handleChange: (event) => {
+				const { contact } = getStore();
+				setStore({
+					contact: {
 						...contact,
-						agenda_slug: agendaSlug
-					})
-				})
-					.then(response => response.json())
-					.then(() => getActions().loadContacts()) // Reload contacts after adding
-					.catch(error => console.error("Error adding contact:", error));
+						[event.target.name]: event.target.value
+					}
+				});
 			},
-			updateContact: (contactId, updatedContact) => {
-				// Update a contact
-				fetch(`${baseUrl}${contactId}`, {
-					method: "PUT",
+			// Handle form submission for both adding and updating contacts
+			handleSubmit: () => {
+				const { contact } = getStore();
+				const method = contact.id ? "PUT" : "POST"; // Determine if we are updating or adding
+				const url = contact.id ? `${fakeAPIUrl}${contact.id}` : fakeAPIUrl;
+
+				// Return the promise so that the component can chain with .then() or .catch()
+				return fetch(url, {
+					method: method,
 					headers: {
 						"Content-Type": "application/json"
 					},
-					body: JSON.stringify(updatedContact)
+					body: JSON.stringify(contact)
 				})
-					.then(response => response.json())
-					.then(() => getActions().loadContacts()) // Reload contacts after updating
-					.catch(error => console.error("Error updating contact:", error));
+					.then(response => {
+						if (!response.ok) {
+							throw new Error('Problem submitting contact');
+						}
+						return response.json();
+					})
+					.then(() => {
+						// Reload contacts after adding/updating and reset the contact form
+						getActions().loadContacts();
+						setStore({
+							contact: {
+								full_name: "",
+								email: "",
+								agenda_slug: agendaSlug,
+								address: "",
+								phone: "",
+							}
+						});
+					});
 			},
+			// Delete a contact by ID
 			deleteContact: (contactId) => {
-				// Delete a contact
-				fetch(`${baseUrl}${contactId}`, {
+				return fetch(`${fakeAPIUrl}${contactId}`, {
 					method: "DELETE"
 				})
-					.then(() => getActions().loadContacts()) // Reload contacts after deleting
-					.catch(error => console.error("Error deleting contact:", error));
+					.then(response => {
+						if (!response.ok) {
+							throw new Error('Problem deleting contact');
+						}
+						return response.json();
+					})
+					.then(() => {
+						// Reload contacts after deleting
+						getActions().loadContacts();
+					});
 			}
 		}
 	};
 };
 
 export default getState;
-
-// 	return {
-// 		store: {
-// 			demo: [
-// 				{
-// 					title: "FIRST",
-// 					background: "white",
-// 					initial: "white"
-// 				},
-// 				{
-// 					title: "SECOND",
-// 					background: "white",
-// 					initial: "white"
-// 				}
-// 			],
-// 			contacts: []
-// 		},
-// 		actions: {
-// 			// Use getActions to call a function within a fuction
-// 			exampleFunction: () => {
-// 				getActions().changeColor(0, "green");
-// 			},
-// 			loadSomeData: () => {
-// 				fetch('https://api.example.com/contacts')
-// 					.then(response => response.json())
-// 					.then(data => setStore({ contacts: data }))
-// 					.catch(error => console.error("Error loading contacts:", error));
-// 			},
-// 			changeColor: (index, color) => {
-// 				//get the store
-// 				const store = getStore();
-
-// 				//we have to loop the entire demo array to look for the respective index
-// 				//and change its color
-// 				const demo = store.demo.map((elm, i) => {
-// 					if (i === index) elm.background = color;
-// 					return elm;
-// 				});
-
-// 				//reset the global store
-// 				setStore({ demo: demo });
-// 			},
-// 			addContact: (contact) => {
-// 				const store = getStore();
-// 				const updatedContacts = [...store.contacts, contact];
-// 				setStore({ contacts: updatedContacts });
-// 			},
-// 			updateContact: (updatedContact) => {
-// 				const store = getStore();
-// 				const updatedContacts = store.contacts.map(contact =>
-// 					contact.id === updatedContact.id ? updatedContact : contact
-// 				);
-// 				setStore({ contacts: updatedContacts });
-// 			},
-// 			deleteContact: (contactId) => {
-// 				const store = getStore();
-// 				const updatedContacts = store.contacts.filter(contact => contact.id !== contactId);
-// 				setStore({ contacts: updatedContacts });
-// 			}
-// 		}
-// 	};
-// };
